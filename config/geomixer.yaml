@@ -1,0 +1,44 @@
+version: 1
+
+# 域名规则 → geosite.dat
+geosite:
+  inputs:
+    - name: gary_iptv
+      kind: plain
+      path: ./extracted/gary_domain.txt
+    - name: cathy_iptv
+      kind: plain
+      path: ./extracted/cathy_domain.txt
+  outputs:
+    - name: gtvsite.dat
+      categories:
+        - name: giptv      # gary项目的域名标签
+          steps:
+            - action: add
+              input: gary_iptv
+        - name: ciptv      # Cathy项目的域名标签
+          steps:
+            - action: add
+              input: cathy_iptv
+
+# IP规则 → geoip.dat
+geoip:
+  inputs:
+    - name: gary_iptv
+      kind: plain
+      path: ./extracted/gary_ip.txt
+    - name: cathy_iptv
+      kind: plain
+      path: ./extracted/cathy_ip.txt
+  outputs:
+    - name: gtvip.dat
+      categories:
+        - name: giptv      # gary项目的IP标签
+          steps:
+            - action: add
+              input: gary_iptv
+        - name: ciptv      # Cathy项目的IP标签
+          steps:
+            - action: add
+              input: cathy_iptv
+

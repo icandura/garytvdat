@@ -1,0 +1,106 @@
+name: 自动生成IPTV规则dat文件
+
+on:
+  schedule:
+    # 每周二凌晨0点执行（UTC时间，对应北京时间8点）
+    - cron: '0 0 * * 2'
+  workflow_dispatch:  # 支持手动触发测试
+
+permissions:
+  contents: write     # 允许提交文件到仓库
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出当前仓库
+        uses: actions/checkout@v4
+
+      - name: 安装依赖工具 jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: 下载 geomixer 工具
+        run: |
+          # 获取最新版本号并下载对应二进制
+          GEO_VER=$(curl -s https://api.github.com/repos/KazZzeL/geomixer/releases/latest | jq -r '.tag_name')
+          wget -q "https://github.com/KazZzeL/geomixer/releases/download/${GEO_VER}/geomixer_linux_amd64.tar.gz"
+          tar -xzf geomixer_linux_amd64.tar.gz
+          chmod +x geomixer
+          ./geomixer version
+
+      - name: 获取数据源最新版本信息
+        id: check_update
+        run: |
+          # 获取gary仓库 iptv_passwall.txt 的最新commit SHA和日期
+          GARY_COMMIT=$(curl -s "https://api.github.com/repos/marcuccilli/gary/commits?path=iptv_passwall.txt&per_page=1" | jq -r '.[0].sha')
+          GARY_DATE=$(curl -s "https://api.github.com/repos/marcuccilli/gary/commits?path=iptv_passwall.txt&per_page=1" | jq -r '.[0].commit.committer.date')
+
+          # 获取Cathy仓库 cathy_passwall.txt 的最新commit SHA和日期
+          CATHY_COMMIT=$(curl -s "https://api.github.com/repos/marcuccilli/Cathy/commits?path=cathy_passwall.txt&per_page=1" | jq -r '.[0].sha')
+          CATHY_DATE=$(curl -s "https://api.github.com/repos/marcuccilli/Cathy/commits?path=cathy_passwall.txt&per_page=1" | jq -r '.[0].commit.committer.date')
+
+          # 输出到环境变量
+          echo "GARY_SHA=$GARY_COMMIT" >> $GITHUB_ENV
+          echo "GARY_DATE=$GARY_DATE" >> $GITHUB_ENV
+          echo "CATHY_SHA=$CATHY_COMMIT" >> $GITHUB_ENV
+          echo "CATHY_DATE=$CATHY_DATE" >> $GITHUB_ENV
+
+          # 读取本地记录的上次SHA
+          if [ -f .last_source_sha ]; then
+            source .last_source_sha
+          fi
+
+          # 对比是否有更新
+          if [ "$GARY_COMMIT" = "$LAST_GARY_SHA" ] && [ "$CATHY_COMMIT" = "$LAST_CATHY_SHA" ]; then
+            echo "数据源无更新，跳过生成"
+            echo "HAS_UPDATE=false" >> $GITHUB_ENV
+          else
+            echo "检测到数据源更新，开始生成"
+            echo "HAS_UPDATE=true" >> $GITHUB_ENV
+          fi
+
+      - name: 下载数据源文件并提取规则
+        if: env.HAS_UPDATE == 'true'
+        run: |
+          mkdir -p extracted
+          # 下载gary的规则文件
+          wget -q -O extracted/gary.txt "https://raw.githubusercontent.com/marcuccilli/gary/main/iptv_passwall.txt"
+          # 下载Cathy的规则文件
+          wget -q -O extracted/cathy.txt "https://raw.githubusercontent.com/marcuccilli/Cathy/main/cathy_passwall.txt"
+
+          # 执行提取脚本
+          bash scripts/extract_rules.sh extracted/gary.txt extracted gary
+          bash scripts/extract_rules.sh extracted/cathy.txt extracted cathy
+
+      - name: 生成 dat 文件
+        if: env.HAS_UPDATE == 'true'
+        run: |
+          mkdir -p output
+          ./geomixer mix config/geomixer.yaml -o ./output
+
+      - name: 更新版本记录与README
+        if: env.HAS_UPDATE == 'true'
+        run: |
+          # 保存本次的SHA，用于下次对比
+          cat > .last_source_sha << EOF
+          LAST_GARY_SHA=${{ env.GARY_SHA }}
+          LAST_CATHY_SHA=${{ env.CATHY_SHA }}
+          EOF
+
+          # 格式化日期为可读格式
+          GARY_DATE_READABLE=$(date -d "$GARY_DATE" "+%Y-%m-%d %H:%M:%S")
+          CATHY_DATE_READABLE=$(date -d "$CATHY_DATE" "+%Y-%m-%d %H:%M:%S")
+
+          # 替换README中的占位符（提前在README里写好标记）
+          sed -i "s/<!-- GARY_DATE -->.*<!-- GARY_DATE -->/<!-- GARY_DATE -->${GARY_DATE_READABLE}<!-- GARY_DATE -->/g" README.md
+          sed -i "s/<!-- CATHY_DATE -->.*<!-- CATHY_DATE -->/<!-- CATHY_DATE -->${CATHY_DATE_READABLE}<!-- CATHY_DATE -->/g" README.md
+
+      - name: 提交并推送结果
+        if: env.HAS_UPDATE == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add output/ .last_source_sha README.md
+          git commit -m "auto: 更新规则dat文件，数据源同步至最新"
+          git push
+
