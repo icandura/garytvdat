@@ -32,7 +32,8 @@ jobs:
           # 把解压目录里的二进制移到当前目录
           mv "${DIR_NAME}/geomixer" ./geomixer
           chmod +x geomixer
-          ./geomixer version
+          # 替换原来的 ./geomixer version，用 help 校验二进制可正常执行
+          ./geomixer help
 
       - name: 获取数据源最新版本信息
         id: check_update
