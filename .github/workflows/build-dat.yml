@@ -2,8 +2,8 @@ name: 自动生成IPTV规则dat文件
 
 on:
   schedule:
-    # 每周二凌晨0点执行（UTC时间，对应北京时间8点）
-    - cron: '0 0 * * 2'
+    # 每天凌晨0点执行（UTC时间，对应北京时间8点）
+    - cron: '0 0 * * *'
   workflow_dispatch:  # 支持手动触发测试
 
 permissions:
@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 检出当前仓库
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 安装依赖工具 jq
         run: sudo apt-get update && sudo apt-get install -y jq
