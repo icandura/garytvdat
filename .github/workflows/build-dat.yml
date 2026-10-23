@@ -23,8 +23,9 @@ jobs:
         run: |
           # 获取最新版本号并下载对应二进制
           GEO_VER=$(curl -s https://api.github.com/repos/KazZzeL/geomixer/releases/latest | jq -r '.tag_name')
-          wget -q "https://github.com/KazZzeL/geomixer/releases/download/${GEO_VER}/geomixer_linux_amd64.tar.gz"
-          tar -xzf geomixer_linux_amd64.tar.gz
+          ASSET_NAME="geomixer-${GEO_VER}-linux-amd64.tar.gz"
+          wget -q "https://github.com/KazZzeL/geomixer/releases/download/${GEO_VER}/${ASSET_NAME}"
+          tar -xzf "${ASSET_NAME}"
           chmod +x geomixer
           ./geomixer version
 
