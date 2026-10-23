@@ -26,8 +26,11 @@ jobs:
           # 去掉版本号前面的 v
           GEO_VER_RAW=$(echo "$GEO_VER" | sed 's/^v//')
           ASSET_NAME="geomixer-${GEO_VER_RAW}-linux-amd64.tar.gz"
+          DIR_NAME="geomixer-${GEO_VER_RAW}-linux-amd64"
           wget -q "https://github.com/KazZzeL/geomixer/releases/download/${GEO_VER}/${ASSET_NAME}"
           tar -xzf "${ASSET_NAME}"
+          # 把解压目录里的二进制移到当前目录
+          mv "${DIR_NAME}/geomixer" ./geomixer
           chmod +x geomixer
           ./geomixer version
 
