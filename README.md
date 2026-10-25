@@ -25,8 +25,8 @@ dip(ext:"gtvip.dat:ciptv")->CIPTV
 ```
 
 ## 数据源版本
-- Gary源最新更新：<!-- GARY_DATE -->2026-10-24 00:58:32<!-- GARY_DATE -->
-- Cathy源最新更新：<!-- CATHY_DATE -->2026-10-24 01:01:11<!-- CATHY_DATE -->
+- Gary源最新更新：<!-- GARY_DATE -->2026-10-25 00:58:51<!-- GARY_DATE -->
+- Cathy源最新更新：<!-- CATHY_DATE -->2026-10-25 01:01:14<!-- CATHY_DATE -->
 
 ## 生成文件
 - `gtvsite.dat`：包含分类 `giptv`（Gary）、`ciptv`（Cathy）
