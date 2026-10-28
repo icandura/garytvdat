@@ -25,7 +25,7 @@ dip(ext:"gtvip.dat:ciptv")->CIPTV
 ```
 
 ## 数据源版本
-- Gary源最新更新：<!-- GARY_DATE -->2026-10-26 01:10:24<!-- GARY_DATE -->
+- Gary源最新更新：<!-- GARY_DATE -->2026-10-28 00:46:37<!-- GARY_DATE -->
 - Cathy源最新更新：<!-- CATHY_DATE -->2026-10-27 01:40:15<!-- CATHY_DATE -->
 
 ## 生成文件
